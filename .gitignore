@@ -1,0 +1,13 @@
+
+# Ignore Code::Blocks specific files
+#*.cbp
+*.layout
+*.depend
+
+# Ignore build files
+/build/
+/bin/
+/obj/
+
+# Save files
+*.dat
