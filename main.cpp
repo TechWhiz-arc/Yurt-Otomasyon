@@ -1,148 +1,181 @@
-#include <iostream>
-#include <string>
-#include <time.h>
+#include<iostream>
+#include<string>
+#include<fstream>
 
-// Function prototypes
-void ogrenciKayit();
-void aidatOdeme();
-void yurttanCikis();
-void yurdaGiris();
+#define OGRENCİ_ARRAY_SIZE 500
 
-int main() {
-    int secim;
+struct ogrenci {
+    std::string ad = "";
+    std::string soyad = "";
+    int TC = 0;
+};
 
-    std::cout << "Hangi işlemi yapmak istiyorsunuz? \n 1-Öğrenci kayıt\n 2-Aidat ödeme \n 3-Yurttan çıkış\n 4-Yurda giriş\n";
-    std::cin >> secim;
+ogrenci ogrenciler[OGRENCİ_ARRAY_SIZE];
 
-    switch (secim) {
-        case 1:
-            ogrenciKayit();
-            break;
-        case 2:
-            aidatOdeme();
-            break;
-        case 3:
-            yurttanCikis();
-            break;
-        case 4:
-            yurdaGiris();
-            break;
-        default:
-            std::cout << "Geçersiz seçim." << std::endl;
-            break;
-    }
-
-    return 0;
-}
-
-// Öğrenci kayıt fonksiyonu
-void ogrenciKayit() {
-    std::string ad, soyad, DT, cinsiyet, posta, adres, university, veli, vcep, vposta, yakinlik, burs;
-    int oda_numara, oda_kisi, yatak_numara, kat, bmiktar, TC, cep;
-    srand(time(nullptr));
-
-    setlocale(LC_ALL, "Turkish");
-
-    std::cout << "Öğrenci adını girin: ";
-    std::cin >> ad;
-    std::cout << "Öğrenci soyadını girin: ";
-    std::cin >> soyad;
-    std::cout << "Öğrenci TC kimlik numarasını girin: ";
-    std::cin >> TC;
-    std::cout << "Öğrenci doğum tarihini girin: ";
-    std::cin >> DT;
-    std::cout << "Öğrenci cinsiyetini girin: ";
-    std::cin >> cinsiyet;
-    std::cout << "Öğrenci cep telefonunu girin: ";
-    std::cin >> cep;
-    std::cout << "Öğrenci e-postasını girin: ";
-    std::cin >> posta;
-    std::cout << "Öğrenci adresini girin: ";
-    std::cin >> adres;
-    std::cout << "Üniversite adını girin: ";
-    std::cin >> university;
-    std::cout << "Veli adını-soyadını girin: ";
-    std::cin >> veli;
-    std::cout << "Velinin cep telefonunu girin: ";
-    std::cin >> vcep;
-    std::cout << "Velinin e-posta adresini girin: ";
-    std::cin >> vposta;
-    std::cout << "Velinin öğrenciye olan yakınlığı nedir?(anne,baba,abi...) ";
-    std::cin >> yakinlik;
-    std::cout << "Öğrencinin(varsa) aldığı burs türü nedir(devlet,vakıf)? ";
-    std::cin >> burs;
-    std::cout << "Öğrencinin aldığı burs miktarını girin: ";
-    std::cin >> bmiktar;
-
-    // Random oda numarası
-    oda_numara = rand() % 501;
-    if (oda_numara == 0) {
-        oda_numara++;
-    }
-    std::cout << "Oda numaranız: " << oda_numara << std::endl;
-
-    kat = oda_numara / 50;
-    std::cout << "Kat numaranız: " << kat << std::endl;
-
-    // Random oda kişisi
-    oda_kisi = rand() % 9;
-    if (oda_kisi == 0) {
-        oda_kisi++;
-    }
-    std::cout << "Odanız " << oda_kisi << " kişilik." << std::endl;
-
-    // Random yatak numarası
-    yatak_numara = rand() % 4001;
-    std::cout << "Yatak numaranız: " << yatak_numara << std::endl;
-}
-
-// Aidat ödeme fonksiyonu
-void aidatOdeme() {
-    int oda_kisi, aidat, odeme, borc;
-
-    std::cout << "Odanız kaç kişilik (1/2/4/8)? ";
-    std::cin >> oda_kisi;
-
-    if (oda_kisi == 1) {
-        aidat = 855;
-    } else if (oda_kisi == 2) {
-        aidat = 765;
-    } else if (oda_kisi == 4) {
-        aidat = 720;
-    } else if (oda_kisi == 8) {
-        aidat = 517;
-    } else {
-        std::cout << "Geçersiz oda kişisi!" << std::endl;
+void saveStudents() {
+    std::ofstream file("students.dat", std::ios::binary);
+    if (!file) {
+        std::cerr << "Dosya açılamadı!" << std::endl;
         return;
     }
 
-    std::cout << "Bu ay ne kadar aidat ödemesi yaptınız? ";
-    std::cin >> odeme;
-    borc = aidat - odeme;
-    if (borc < 0) {
-        borc = 0;
+    for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
+        if (ogrenciler[i].ad != "") {
+            int nameLength = ogrenciler[i].ad.size();
+            file.write(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
+            file.write(ogrenciler[i].ad.c_str(), nameLength);  // Write name
+
+            int surnameLength = ogrenciler[i].soyad.size();
+            file.write(reinterpret_cast<char*>(&surnameLength), sizeof(surnameLength));
+            file.write(ogrenciler[i].soyad.c_str(), surnameLength);  // Write surname
+
+            file.write(reinterpret_cast<char*>(&ogrenciler[i].TC), sizeof(ogrenciler[i].TC));  // Write TC number
+        }
     }
-    std::cout << "Kalan borcunuz: " << borc << std::endl;
+    file.close();
 }
 
-// Yurttan çıkış fonksiyonu
-void yurttanCikis() {
-    float cikis;
-    std::cout << "Öğrencinin yurttan çıkış saatini girin: ";
-    std::cin >> cikis;
+void loadStudents() {
+    std::ifstream file("students.dat", std::ios::binary);
+    if (!file) {
+        std::cerr << "Dosya açılamadı!" << std::endl;
+        return;
+    }
 
-    if (cikis < 6.00) {
-        std::cout << "Sabah saat altıdan önce yurttan çıkamazsınız." << std::endl;
+    for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
+        int nameLength;
+        file.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
+        if (file.eof()) break;
+
+        ogrenciler[i].ad.resize(nameLength);
+        file.read(&ogrenciler[i].ad[0], nameLength);
+
+        int surnameLength;
+        file.read(reinterpret_cast<char*>(&surnameLength), sizeof(surnameLength));
+        ogrenciler[i].soyad.resize(surnameLength);
+        file.read(&ogrenciler[i].soyad[0], surnameLength);
+
+        file.read(reinterpret_cast<char*>(&ogrenciler[i].TC), sizeof(ogrenciler[i].TC));
+
+        if (file.eof()) break;
+    }
+
+    file.close();
+}
+
+void ogrenciKayit() {
+    for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
+        if (ogrenciler[i].ad == "") { // Find the first empty spot
+            std::cout << "Öğrenci adını girin: ";
+            std::cin >> ogrenciler[i].ad;
+            std::cout << "Öğrencinin soyadını girin: ";
+            std::cin >> ogrenciler[i].soyad;
+            std::cout << "Öğrencinin TC kimlik numarasını girin: ";
+            std::cin >> ogrenciler[i].TC;
+            std::cout << "Öğrenci başarılı ile kaydedildi.\n";
+            // Save immediately after registration
+            saveStudents();
+            return; // exit after saving
+        }
+    }
+    std::cout << "Kayıt yapılacak yer kalmadı.\n";
+}
+
+void ogrenciSil() {
+    std::string ad, soyad;
+    int TC;
+    std::cout << "Öğrencinin adını girin: ";
+    std::cin >> ad;
+    std::cout << "Öğrencinin soyadını girin: ";
+    std::cin >> soyad;
+    std::cout << "Öğrencinin TC kimlik numarasını girin: ";
+    std::cin >> TC;
+
+    // Search for the student and delete their record
+    for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
+        if (ogrenciler[i].ad == ad && ogrenciler[i].soyad == soyad && ogrenciler[i].TC == TC) {
+            ogrenciler[i].ad = "";
+            ogrenciler[i].soyad = "";
+            ogrenciler[i].TC = 0;
+            std::cout << "Öğrenci kaydınız başarıyla silindi.\n";
+            // Save after deletion
+            saveStudents();
+            return;
+        }
+    }
+    std::cout << "Öğrenci kaydı bulunamadı.\n";
+}
+
+void duzenle() {
+    std::string ad, soyad;
+    std::cout << "Değiştirmek istediğiniz öğrencinin adını girin: ";
+    std::cin >> ad;
+    std::cout << "Değiştirmek istediğiniz öğrencinin soyadını girin: ";
+    std::cin >> soyad;
+
+    // Find the student to edit
+    for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
+        if (ogrenciler[i].ad == ad && ogrenciler[i].soyad == soyad) {
+            std::cout << "Yeni adı girin: ";
+            std::cin >> ogrenciler[i].ad;
+            std::cout << "Yeni soyadı girin: ";
+            std::cin >> ogrenciler[i].soyad;
+            std::cout << "Öğrenci kaydı başarıyla güncellendi.\n";
+            // Save after edit
+            saveStudents();
+            return;
+        }
+    }
+    std::cout << "Öğrenci kaydı bulunamadı.\n";
+}
+
+void listele() {
+    bool found = false;
+    for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
+        if (ogrenciler[i].ad != "") {
+            std::cout << "Ad: " << ogrenciler[i].ad << "\n";
+            std::cout << "Soyad: " << ogrenciler[i].soyad << "\n";
+            std::cout << "TC: " << ogrenciler[i].TC << "\n\n";
+            found = true;
+        }
+    }
+    if (!found) {
+        std::cout << "Kayıtlı öğrenci bulunmamaktadır.\n";
     }
 }
 
-// Yurda giriş fonksiyonu
-void yurdaGiris() {
-    float giris;
-    std::cout << "Öğrencinin yurda giriş saatini girin: ";
-    std::cin >> giris;
+void menu() {
+    std::cout << "Hangi işlemi yapmak istiyorsunuz? \n [1]-Öğrenci kaydet\n [2]-Öğrenci Kaydını sil\n [3]-Öğrenci kaydını düzenle\n [4]-Kayıtlı öğrencileri listele\n [0]-Çıkış\n";
+}
 
-    if (giris > 23.00) {
-        std::cout << "Yurda akşam on birden sonra giriş yasaktır." << std::endl;
+int main() {
+    // Load students when the program starts
+    loadStudents();
+
+    int secim;
+    bool answer = true;
+    while (answer) {
+        menu();
+        std::cin >> secim;
+        switch (secim) {
+            case 1:
+                ogrenciKayit();
+                break;
+            case 2:
+                ogrenciSil();
+                break;
+            case 3:
+                duzenle();
+                break;
+            case 4:
+                listele();
+                break;
+            case 0:
+                answer = false;
+                break;
+            default:
+                std::cout << "Geçersiz seçim, tekrar deneyin.\n";
+        }
     }
+    return 0;
 }
