@@ -1,19 +1,20 @@
-#include<iostream>
-#include<string>
-#include<fstream>
+// Samethan Sönmez NO:2412729001
+#include <iostream>
+#include <string>
+#include <fstream>
 
 #define OGRENCİ_ARRAY_SIZE 500
 
 struct ogrenci {
     std::string ad = "";
     std::string soyad = "";
-    int TC = 0;
+    long long TC = 0;
 };
 
 ogrenci ogrenciler[OGRENCİ_ARRAY_SIZE];
 
 void saveStudents() {
-    std::ofstream file("students.dat", std::ios::binary);
+    std::ofstream file("students.dat", std::ios::binary | std::ios::trunc);
     if (!file) {
         std::cerr << "Dosya açılamadı!" << std::endl;
         return;
@@ -23,41 +24,49 @@ void saveStudents() {
         if (ogrenciler[i].ad != "") {
             int nameLength = ogrenciler[i].ad.size();
             file.write(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
-            file.write(ogrenciler[i].ad.c_str(), nameLength);  // Write name
+            file.write(ogrenciler[i].ad.c_str(), nameLength);
 
             int surnameLength = ogrenciler[i].soyad.size();
             file.write(reinterpret_cast<char*>(&surnameLength), sizeof(surnameLength));
-            file.write(ogrenciler[i].soyad.c_str(), surnameLength);  // Write surname
+            file.write(ogrenciler[i].soyad.c_str(), surnameLength);
 
-            file.write(reinterpret_cast<char*>(&ogrenciler[i].TC), sizeof(ogrenciler[i].TC));  // Write TC number
+            file.write(reinterpret_cast<char*>(&ogrenciler[i].TC), sizeof(ogrenciler[i].TC));
         }
     }
+
     file.close();
 }
 
 void loadStudents() {
     std::ifstream file("students.dat", std::ios::binary);
     if (!file) {
-        std::cerr << "Dosya açılamadı!" << std::endl;
-        return;
+        return; // Eğer dosya yoksa veya açılamıyorsa, sessizce çık
     }
 
-    for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
-        int nameLength;
-        file.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
-        if (file.eof()) break;
+    int index = 0;
+    while (true) {
+        int nameLength, surnameLength;
+        if (!file.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength))) break;
 
-        ogrenciler[i].ad.resize(nameLength);
-        file.read(&ogrenciler[i].ad[0], nameLength);
+        std::string ad(nameLength, '\0');
+        file.read(&ad[0], nameLength);
 
-        int surnameLength;
-        file.read(reinterpret_cast<char*>(&surnameLength), sizeof(surnameLength));
-        ogrenciler[i].soyad.resize(surnameLength);
-        file.read(&ogrenciler[i].soyad[0], surnameLength);
+        if (!file.read(reinterpret_cast<char*>(&surnameLength), sizeof(surnameLength))) break;
 
-        file.read(reinterpret_cast<char*>(&ogrenciler[i].TC), sizeof(ogrenciler[i].TC));
+        std::string soyad(surnameLength, '\0');
+        file.read(&soyad[0], surnameLength);
 
-        if (file.eof()) break;
+        int TC;
+        if (!file.read(reinterpret_cast<char*>(&TC), sizeof(TC))) break;
+
+        if (index < OGRENCİ_ARRAY_SIZE) {
+            ogrenciler[index].ad = ad;
+            ogrenciler[index].soyad = soyad;
+            ogrenciler[index].TC = TC;
+            index++;
+        } else {
+            break; // Öğrenci dizisini aşma durumunda döngüden çık
+        }
     }
 
     file.close();
@@ -65,7 +74,7 @@ void loadStudents() {
 
 void ogrenciKayit() {
     for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
-        if (ogrenciler[i].ad == "") { // Find the first empty spot
+        if (ogrenciler[i].ad == "") {
             std::cout << "Öğrenci adını girin: ";
             std::cin >> ogrenciler[i].ad;
             std::cout << "Öğrencinin soyadını girin: ";
@@ -73,9 +82,8 @@ void ogrenciKayit() {
             std::cout << "Öğrencinin TC kimlik numarasını girin: ";
             std::cin >> ogrenciler[i].TC;
             std::cout << "Öğrenci başarılı ile kaydedildi.\n";
-            // Save immediately after registration
             saveStudents();
-            return; // exit after saving
+            return;
         }
     }
     std::cout << "Kayıt yapılacak yer kalmadı.\n";
@@ -83,7 +91,7 @@ void ogrenciKayit() {
 
 void ogrenciSil() {
     std::string ad, soyad;
-    int TC;
+    long long  TC;
     std::cout << "Öğrencinin adını girin: ";
     std::cin >> ad;
     std::cout << "Öğrencinin soyadını girin: ";
@@ -91,14 +99,12 @@ void ogrenciSil() {
     std::cout << "Öğrencinin TC kimlik numarasını girin: ";
     std::cin >> TC;
 
-    // Search for the student and delete their record
     for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
         if (ogrenciler[i].ad == ad && ogrenciler[i].soyad == soyad && ogrenciler[i].TC == TC) {
             ogrenciler[i].ad = "";
             ogrenciler[i].soyad = "";
             ogrenciler[i].TC = 0;
-            std::cout << "Öğrenci kaydınız başarıyla silindi.\n";
-            // Save after deletion
+            std::cout << "Öğrenci kaydı başarıyla silindi.\n";
             saveStudents();
             return;
         }
@@ -113,7 +119,6 @@ void duzenle() {
     std::cout << "Değiştirmek istediğiniz öğrencinin soyadını girin: ";
     std::cin >> soyad;
 
-    // Find the student to edit
     for (int i = 0; i < OGRENCİ_ARRAY_SIZE; i++) {
         if (ogrenciler[i].ad == ad && ogrenciler[i].soyad == soyad) {
             std::cout << "Yeni adı girin: ";
@@ -121,7 +126,6 @@ void duzenle() {
             std::cout << "Yeni soyadı girin: ";
             std::cin >> ogrenciler[i].soyad;
             std::cout << "Öğrenci kaydı başarıyla güncellendi.\n";
-            // Save after edit
             saveStudents();
             return;
         }
@@ -149,12 +153,10 @@ void menu() {
 }
 
 int main() {
-    // Load students when the program starts
     loadStudents();
 
     int secim;
-    bool answer = true;
-    while (answer) {
+    while (true) {
         menu();
         std::cin >> secim;
         switch (secim) {
@@ -171,11 +173,10 @@ int main() {
                 listele();
                 break;
             case 0:
-                answer = false;
-                break;
+                std::cout << "Programdan çıkılıyor...\n";
+                return 0;
             default:
                 std::cout << "Geçersiz seçim, tekrar deneyin.\n";
         }
     }
-    return 0;
 }
